@@ -79,12 +79,16 @@ setting the current working directory if you already have data files in a partic
 hbmenu uses zlib for compression and tinyxml2 for XML parsing. These libraries are provided by devkitPro through the portlibs mechanism. In order to install them, use the following command:
 
 ```shell
-    pacman -S 3ds-zlib 3ds-tinyxml2
+    pacman -S 3ds-zlib 3ds-tinyxml2 3ds-libconfig
 ```
 
 (Note that `dkp-pacman` is used instead on systems that do not distribute pacman, such as macOS or Debian-based Linux distros)
 
 Binaries of hbmenu can be downloaded from the [Releases](https://github.com/fincs/new-hbmenu/releases) page.
+
+#### File Associations
+
+This is a feature backported from [nx-hbmenu](https://switchbrew.org/wiki/Homebrew_Menu#File_Associations). However, there is one notable difference: icons must be a 48x48 t3x-generated file with GPU_RGB565 as its color format.
 
 #### Contributing
 
