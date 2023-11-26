@@ -12,21 +12,22 @@
 #define ZLIB_CHUNK (16 * 1024)
 
 static int listenfd = -1;
-static int datafd   = -1;
-static int udpfd    = -1;
+static int datafd = -1;
+static int udpfd = -1;
 static volatile size_t filelen, filetotal;
 static volatile bool wantExit = false;
 
-static void netloaderError(const char* func, int err);
+static void netloaderError(const char *func, int err);
 
 static bool set_socket_nonblocking(int sock)
 {
 	int flags = fcntl(sock, F_GETFL);
-	if (flags == -1) return false;
+	if (flags == -1)
+		return false;
 	return fcntl(sock, F_SETFL, flags | O_NONBLOCK) == 0;
 }
 
-static int recvall(int sock, void* buffer, int size, int flags)
+static int recvall(int sock, void *buffer, int size, int flags)
 {
 	int len, sizeleft = size;
 
@@ -37,14 +38,16 @@ static int recvall(int sock, void* buffer, int size, int flags)
 		{
 			size = 0;
 			break;
-		} else if (len < 0)
+		}
+		else if (len < 0)
 		{
 			if (errno != EAGAIN && errno != EWOULDBLOCK)
 			{
 				netloaderError("recv", errno);
 				break;
 			}
-		} else
+		}
+		else
 		{
 			sizeleft -= len;
 			buffer += len;
@@ -82,7 +85,7 @@ static bool netloaderActivate(void)
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	serv_addr.sin_port = htons(NETWORK_PORT);
 
-	if (bind(udpfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0)
+	if (bind(udpfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
 	{
 		netloaderError("bind udp socket", errno);
 		return false;
@@ -103,7 +106,7 @@ static bool netloaderActivate(void)
 		return false;
 	}
 
-	int rc = bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+	int rc = bind(listenfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
 	if (rc != 0)
 	{
 		netloaderError("bind", errno);
@@ -117,7 +120,7 @@ static bool netloaderActivate(void)
 	}
 
 	rc = listen(listenfd, 10);
-	if(rc != 0)
+	if (rc != 0)
 	{
 		netloaderError("listen", errno);
 		return false;
@@ -149,13 +152,13 @@ static void netloaderDeactivate(void)
 	networkDeactivate();
 }
 
-void netloaderError(const char* func, int err)
+void netloaderError(const char *func, int err)
 {
 	netloaderDeactivate();
 	networkError(netloaderUpdate, StrId_NetLoader, func, err);
 }
 
-static int receiveAndDecompress(int sock, FILE* fh, size_t filesize)
+static int receiveAndDecompress(int sock, FILE *fh, size_t filesize)
 {
 	static unsigned char in[ZLIB_CHUNK];
 	static unsigned char out[ZLIB_CHUNK];
@@ -191,7 +194,7 @@ static int receiveAndDecompress(int sock, FILE* fh, size_t filesize)
 			return Z_DATA_ERROR;
 		}
 
-		strm.avail_in = recvall(sock,in,chunksize,0);
+		strm.avail_in = recvall(sock, in, chunksize, 0);
 
 		if (strm.avail_in == 0)
 		{
@@ -211,14 +214,14 @@ static int receiveAndDecompress(int sock, FILE* fh, size_t filesize)
 
 			switch (ret)
 			{
-				case Z_NEED_DICT:
-					ret = Z_DATA_ERROR; // and fall through
-				case Z_DATA_ERROR:
-				case Z_MEM_ERROR:
-				case Z_STREAM_ERROR:
-					inflateEnd(&strm);
-					netloaderError("inflate", ret);
-					return ret;
+			case Z_NEED_DICT:
+				ret = Z_DATA_ERROR; // and fall through
+			case Z_DATA_ERROR:
+			case Z_MEM_ERROR:
+			case Z_STREAM_ERROR:
+				inflateEnd(&strm);
+				netloaderError("inflate", ret);
+				return ret;
 			}
 
 			have = ZLIB_CHUNK - strm.avail_out;
@@ -226,14 +229,14 @@ static int receiveAndDecompress(int sock, FILE* fh, size_t filesize)
 			if (fwrite(out, 1, have, fh) != have || ferror(fh))
 			{
 				inflateEnd(&strm);
-				netloaderError("fwrite",0);
+				netloaderError("fwrite", 0);
 				return Z_ERRNO;
 			}
 
 			total += have;
 			filetotal = total;
-			//sprintf(progress,"%zu (%d%%)",total, (100 * total) / filesize);
-			//netloader_draw_progress();
+			// sprintf(progress,"%zu (%d%%)",total, (100 * total) / filesize);
+			// netloader_draw_progress();
 		} while (strm.avail_out == 0);
 
 		// done when inflate() says it's done
@@ -244,7 +247,7 @@ static int receiveAndDecompress(int sock, FILE* fh, size_t filesize)
 	return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
 }
 
-void netloaderTask(void* arg)
+void netloaderTask(void *arg)
 {
 	struct sockaddr_in sa_udp_remote;
 	char recvbuf[256];
@@ -278,16 +281,16 @@ void netloaderTask(void* arg)
 
 		socklen_t fromlen = sizeof(sa_udp_remote);
 
-		int len = recvfrom(udpfd, recvbuf, sizeof(recvbuf), 0, (struct sockaddr*) &sa_udp_remote, &fromlen);
+		int len = recvfrom(udpfd, recvbuf, sizeof(recvbuf), 0, (struct sockaddr *)&sa_udp_remote, &fromlen);
 		if (len != -1 && strncmp(recvbuf, "3dsboot", 7) == 0)
 		{
 			sa_udp_remote.sin_family = AF_INET;
 			sa_udp_remote.sin_port = htons(NETWORK_PORT);
-			sendto(udpfd, "boot3ds", 7, 0, (struct sockaddr*) &sa_udp_remote,sizeof(sa_udp_remote));
+			sendto(udpfd, "boot3ds", 7, 0, (struct sockaddr *)&sa_udp_remote, sizeof(sa_udp_remote));
 		}
 
 		socklen_t addrlen = sizeof(struct sockaddr_in);
-		datafd = accept(listenfd, (struct sockaddr*)&sa_udp_remote, &addrlen);
+		datafd = accept(listenfd, (struct sockaddr *)&sa_udp_remote, &addrlen);
 		if (datafd < 0)
 		{
 			if (errno != -EWOULDBLOCK && errno != EWOULDBLOCK)
@@ -295,7 +298,8 @@ void netloaderTask(void* arg)
 				netloaderError("accept", errno);
 				return;
 			}
-		} else
+		}
+		else
 		{
 			close(listenfd);
 			listenfd = -1;
@@ -306,7 +310,7 @@ void netloaderTask(void* arg)
 
 	int namelen;
 	int len = recvall(datafd, &namelen, 4, 0);
-	if (len != 4 || namelen >= (sizeof(recvbuf)+1))
+	if (len != 4 || namelen >= (sizeof(recvbuf) + 1))
 	{
 		netloaderError("namelen", errno);
 		return;
@@ -320,7 +324,7 @@ void netloaderTask(void* arg)
 	}
 
 	recvbuf[namelen] = 0;
-	len = recvall(datafd, (int*)&filelen, 4, 0);
+	len = recvall(datafd, (int *)&filelen, 4, 0);
 	if (len != 4)
 	{
 		netloaderError("filelen", errno);
@@ -331,11 +335,11 @@ void netloaderTask(void* arg)
 
 	static menuEntry_s me;
 	menuEntryInit(&me, ENTRY_TYPE_FILE);
-	strncpy(me.path, "sdmc:/3ds/", sizeof(me.path)-1);
-	strncat(me.path, recvbuf, sizeof(me.path)-1);
-	me.path[sizeof(me.path)-1] = 0;
+	strncpy(me.path, "sdmc:/3ds/", sizeof(me.path) - 1);
+	strncat(me.path, recvbuf, sizeof(me.path) - 1);
+	me.path[sizeof(me.path) - 1] = 0;
 
-	FILE* outf = fopen(me.path, "wb");
+	FILE *outf = fopen(me.path, "wb");
 	if (!outf)
 		response = -1;
 	send(datafd, &response, sizeof(response), 0);
@@ -346,7 +350,7 @@ void netloaderTask(void* arg)
 		return;
 	}
 
-	static char fbuf[64*1024];
+	static char fbuf[64 * 1024];
 	setvbuf(outf, fbuf, _IOFBF, sizeof(fbuf));
 	len = receiveAndDecompress(datafd, outf, filelen);
 	fclose(outf);
@@ -363,21 +367,22 @@ void netloaderTask(void* arg)
 		len = recvall(datafd, fbuf, cmdlen, 0);
 		if (len == cmdlen)
 		{
-			argData_s* ad = &me.args;
+			argData_s *ad = &me.args;
 			ad->buf[0] = 0;
-			ad->dst = (char*)&ad->buf[1];
+			ad->dst = (char *)&ad->buf[1];
 
-			char* ptr = fbuf;
-			char* ptrend = fbuf + cmdlen;
+			char *ptr = fbuf;
+			char *ptrend = fbuf + cmdlen;
 			while (ptr < ptrend)
 				ptr += launchAddArg(ad, ptr);
 		}
 	}
 
 	uint32_t remote = sa_udp_remote.sin_addr.s_addr;
-	if (remote) {
+	if (remote)
+	{
 		char netlinked[18];
-		sprintf(netlinked,"%08" PRIx32 "_3DSLINK_",remote);
+		sprintf(netlinked, "%08" PRIx32 "_3DSLINK_", remote);
 		launchAddArg(&me.args, netlinked);
 	}
 
@@ -388,7 +393,8 @@ void netloaderTask(void* arg)
 
 void netloaderUpdate(void)
 {
-	if (wantExit || datafd >= 0) return;
+	if (wantExit || datafd >= 0)
+		return;
 
 	if (hidKeysDown() & KEY_B)
 		wantExit = true;
@@ -402,11 +408,11 @@ void netloaderExit(void)
 void netloaderDrawBot(void)
 {
 	char buf[256];
-	const char* text = NULL;
+	const char *text = NULL;
 	if (datafd < 0)
 	{
 		u32 ip = gethostid();
-		snprintf(buf, sizeof(buf), textGetString(StrId_NetLoaderActive), ip&0xFF, (ip>>8)&0xFF, (ip>>16)&0xFF, (ip>>24)&0xFF, NETWORK_PORT);
+		snprintf(buf, sizeof(buf), textGetString(StrId_NetLoaderActive), ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF, NETWORK_PORT);
 		text = buf;
 	}
 

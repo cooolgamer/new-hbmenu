@@ -57,6 +57,7 @@ static void launchFile(const char* path, argData_s* args, executableMetadata_s* 
 {
 	if (em && em->scanned && targetProcess == -1)
 	{
+		
 		// this is a really shitty implementation of what we should be doing
 		// i'm really too lazy to do any better right now, but a good solution will come
 		// (some day)

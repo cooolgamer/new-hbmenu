@@ -9,6 +9,11 @@ endif
 TOPDIR ?= $(CURDIR)
 include $(DEVKITARM)/3ds_rules
 
+#enable debug features
+export DEBUG ?= 0
+
+#release version 
+export RELEASE ?= 0
 
 export VER_MAJOR	:= 2
 export VER_MINOR	:= 4
@@ -16,7 +21,7 @@ export VER_PATCH	:= 2
 
 export VERSTRING	:=	v$(VER_MAJOR).$(VER_MINOR).$(VER_PATCH)
 
-ifeq ($(RELEASE),)
+ifeq ($(RELEASE),1)
 	export VERSTRING	:=	$(VERSTRING)-$(shell git describe --dirty --always)
 endif
 
@@ -53,25 +58,38 @@ GFXBUILD	:=	$(ROMFS)/gfx
 
 APP_TITLE		:=	Homebrew Menu $(VERSTRING)
 APP_DESCRIPTION	:=	Nintendo 3DS Homebrew Launcher
-APP_AUTHOR		:=	hbmenu team
+APP_AUTHOR		:=	Alexyo21
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
+ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mfpu=vfpv2 -mtp=soft -marm -mthumb-interwork
 
-CFLAGS	:=	-g -Wall -O2 -mword-relocations \
-			-fno-math-errno -ffunction-sections \
-			$(ARCH)
+ifeq ($(DEBUG),1)
+	OPTFLAGS := -Og -fno-fast-math
+	LIBS	:= -lconfig -lcitro3d -lctrud -lm -lz -ltinyxml2
+	UFLAGS := 
+else
+	OPTFLAGS := -O2 -fomit-frame-pointer -ffast-math
+	LIBS	:= -lconfig -lcitro3d -lctru -lm -lz -ltinyxml2
+	UFLAGS := -fno-rtti -fno-exceptions
+endif
+
+
+CFLAGS	:=	-g -Wall -flto -mword-relocations \
+	        -ffunction-sections \
+		$(OPTFLAGS) $(ARCH) 
 
 CFLAGS	+=	$(INCLUDE) -D__3DS__ -DVERSION=\"$(VERSTRING)\"
 
-CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
+CXXFLAGS	:= $(CFLAGS) -std=gnu++11 -flto
 
-ASFLAGS	:=	-g $(ARCH)
-LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
+CXXFLAGS        += $(UFLAGS)
 
-LIBS	:= -lconfig -lcitro3d -lctru -lm -lz -ltinyxml2
+ASFLAGS	:=	-g -flto $(ARCH)
+LDFLAGS	=	-specs=3dsx.specs -g -flto $(ARCH) -Wl,-Map,$(notdir $*.map)
+
+# LIBS	:= -lconfig -lcitro3d $(LiBCTR) -lm -lz -ltinyxml2
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

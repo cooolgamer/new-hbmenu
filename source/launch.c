@@ -1,20 +1,21 @@
 #include "common.h"
 #include "ui/titleselect.h"
 
-static const loaderFuncs_s* s_loader;
+static const loaderFuncs_s *s_loader;
 static Handle s_hbKill;
 
 void launchInit(void)
 {
-#define ADD_LOADER(_name) do \
-	{ \
+#define ADD_LOADER(_name)                 \
+	do                                    \
+	{                                     \
 		extern const loaderFuncs_s _name; \
-		if (_name.init()) \
-		{ \
-			s_loader = &_name; \
-			return; \
-		} \
-	} while(0)
+		if (_name.init())                 \
+		{                                 \
+			s_loader = &_name;            \
+			return;                       \
+		}                                 \
+	} while (0)
 
 	s_hbKill = envGetHandle("hb:kill");
 
@@ -30,24 +31,25 @@ void launchExit(void)
 	s_loader->deinit();
 }
 
-const loaderFuncs_s* launchGetLoader(void)
+const loaderFuncs_s *launchGetLoader(void)
 {
 	return s_loader;
 }
 
-size_t launchAddArg(argData_s* ad, const char* arg)
+size_t launchAddArg(argData_s *ad, const char *arg)
 {
-	size_t len = strlen(arg)+1;
-	if ((ad->dst+len) >= (char*)(ad+1)) return len; // Overflow
+	size_t len = strlen(arg) + 1;
+	if ((ad->dst + len) >= (char *)(ad + 1))
+		return len; // Overflow
 	ad->buf[0]++;
 	strcpy(ad->dst, arg);
 	ad->dst += len;
 	return len;
 }
 
-void launchAddArgsFromString(argData_s* ad, char* arg)
+void launchAddArgsFromString(argData_s *ad, char *arg)
 {
-	char c, *pstr, *str=arg, *endarg = arg+strlen(arg);
+	char c, *pstr, *str = arg, *endarg = arg + strlen(arg);
 
 	do
 	{
@@ -56,18 +58,19 @@ void launchAddArgsFromString(argData_s* ad, char* arg)
 			c = *str++;
 		} while ((c == ' ' || c == '\t') && str < endarg);
 
-		pstr = str-1;
+		pstr = str - 1;
 
 		if (c == '\"')
 		{
 			pstr++;
-			while(*str++ != '\"' && str < endarg);
+			while (*str++ != '\"' && str < endarg)
+				;
 		}
-		else
-		if (c == '\'')
+		else if (c == '\'')
 		{
 			pstr++;
-			while(*str++ != '\'' && str < endarg);
+			while (*str++ != '\'' && str < endarg)
+				;
 		}
 		else
 		{
@@ -81,7 +84,7 @@ void launchAddArgsFromString(argData_s* ad, char* arg)
 
 		if (str == (endarg - 1))
 		{
-			if(*str == '\"' || *str == '\'')
+			if (*str == '\"' || *str == '\'')
 				*(str++) = 0;
 			else
 				str++;
@@ -93,10 +96,10 @@ void launchAddArgsFromString(argData_s* ad, char* arg)
 
 		launchAddArg(ad, pstr);
 
-	} while(str<endarg);
+	} while (str < endarg);
 }
 
-void launchMenuEntry(menuEntry_s* me)
+void launchMenuEntry(menuEntry_s *me)
 {
 	bool canUseTitles = loaderCanUseTitles();
 	if (me->descriptor.numTargetTitles && canUseTitles)
@@ -105,7 +108,7 @@ void launchMenuEntry(menuEntry_s* me)
 		titlesCheckUpdate(false, UI_STATE_NULL);
 
 		int i;
-		for (i = 0; i < me->descriptor.numTargetTitles; i ++)
+		for (i = 0; i < me->descriptor.numTargetTitles; i++)
 			if (titlesExists(me->descriptor.targetTitles[i].tid, me->descriptor.targetTitles[i].mediatype))
 				break;
 
@@ -117,7 +120,8 @@ void launchMenuEntry(menuEntry_s* me)
 
 		// Use the title
 		s_loader->useTitle(me->descriptor.targetTitles[i].tid, me->descriptor.targetTitles[i].mediatype);
-	} else if (me->descriptor.selectTargetProcess)
+	}
+	else if (me->descriptor.selectTargetProcess)
 	{
 		if (!canUseTitles)
 		{
@@ -131,7 +135,6 @@ void launchMenuEntry(menuEntry_s* me)
 			titleSelectInit(me);
 			return;
 		}
-
 		// Use the title
 		s_loader->useTitle(me->titleId, me->titleMediatype);
 	}
@@ -139,12 +142,11 @@ void launchMenuEntry(menuEntry_s* me)
 	// Scan the executable if needed
 	if (loaderHasFlag(LOADER_NEED_SCAN))
 		descriptorScanFile(&me->descriptor, me->path);
-
 	// Launch it
 	s_loader->launchFile(me->path, &me->args, &me->descriptor.executableMetadata);
 }
 
-Handle launchOpenFile(const char* path)
+Handle launchOpenFile(const char *path)
 {
 	if (strncmp(path, "sdmc:/", 6) == 0)
 		path += 5;
@@ -152,14 +154,15 @@ Handle launchOpenFile(const char* path)
 		return 0;
 
 	// Convert the executable path to UTF-16
-	static uint16_t __utf16path[PATH_MAX+1];
-	ssize_t units = utf8_to_utf16(__utf16path, (const uint8_t*)path, PATH_MAX);
-	if (units < 0 || units >= PATH_MAX) return 0;
+	static uint16_t __utf16path[PATH_MAX + 1];
+	ssize_t units = utf8_to_utf16(__utf16path, (const uint8_t *)path, PATH_MAX);
+	if (units < 0 || units >= PATH_MAX)
+		return 0;
 	__utf16path[units] = 0;
 
 	// Open the file directly
-	FS_Path apath = { PATH_EMPTY, 1, (u8*)"" };
-	FS_Path fpath = { PATH_UTF16, (units+1)*2, (u8*)__utf16path };
+	FS_Path apath = {PATH_EMPTY, 1, (u8 *)""};
+	FS_Path fpath = {PATH_UTF16, (units + 1) * 2, (u8 *)__utf16path};
 	Handle file;
 	Result res = FSUSER_OpenFileDirectly(&file, ARCHIVE_SDMC, apath, fpath, FS_OPEN_READ, 0);
 	return R_SUCCEEDED(res) ? file : 0;
@@ -172,7 +175,8 @@ bool launchHomeMenuEnabled(void)
 
 void launchHomeMenu(void)
 {
-	if (!launchHomeMenuEnabled()) return;
+	if (!launchHomeMenuEnabled())
+		return;
 	svcSignalEvent(s_hbKill);
 	__system_retAddr = NULL;
 	uiExitLoop();

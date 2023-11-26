@@ -7,30 +7,65 @@
 #include "ui/netsender.h"
 #include "ui/background.h"
 
+bool DEBUG_MODE = false;
+
 const uiStateInfo_s g_uiStateTable[UI_STATE_MAX] =
-{
-	[UI_STATE_MENU]       = { .update = menuUpdate,       .drawTop = menuDrawTop,       .drawBot = menuDrawBot,       },
-	[UI_STATE_ERROR]      = { .update = errorUpdate,                                    .drawBot = errorDrawBot,      },
-	[UI_STATE_REBOOT]     = { .update = rebootUpdate,                                   .drawBot = rebootDrawBot,     },
-	[UI_STATE_TITLESELECT]= { .update = titleSelectUpdate,                              .drawBot = titleSelectDrawBot,},
-	[UI_STATE_NETLOADER]  = { .update = netloaderUpdate,                                .drawBot = netloaderDrawBot,  },
-	[UI_STATE_NETSENDER]  = { .update = netsenderUpdate,                                .drawBot = netsenderDrawBot,  },
-	[UI_STATE_BACKGROUND] = { .update = backgroundUpdate, .drawTop = backgroundDrawTop, .drawBot = backgroundDrawBot, },
+	{
+		[UI_STATE_MENU] = {
+			.update = menuUpdate,
+			.drawTop = menuDrawTop,
+			.drawBot = menuDrawBot,
+		},
+		[UI_STATE_ERROR] = {
+			.update = errorUpdate,
+			.drawBot = errorDrawBot,
+		},
+		[UI_STATE_REBOOT] = {
+			.update = rebootUpdate,
+			.drawBot = rebootDrawBot,
+		},
+		[UI_STATE_TITLESELECT] = {
+			.update = titleSelectUpdate,
+			.drawBot = titleSelectDrawBot,
+		},
+		[UI_STATE_NETLOADER] = {
+			.update = netloaderUpdate,
+			.drawBot = netloaderDrawBot,
+		},
+		[UI_STATE_NETSENDER] = {
+			.update = netsenderUpdate,
+			.drawBot = netsenderDrawBot,
+		},
+		[UI_STATE_BACKGROUND] = {
+			.update = backgroundUpdate,
+			.drawTop = backgroundDrawTop,
+			.drawBot = backgroundDrawBot,
+		},
 };
 
-static void startup(void* unused)
+bool isDebugMode()
+{
+	return DEBUG_MODE;
+}
+
+static void startup(void *unused)
 {
 	menuLoadFileAssoc();
 	menuScan("sdmc:/3ds");
 	uiEnterState(UI_STATE_MENU);
 }
 
-const char* __romfs_path = "sdmc:/boot.3dsx";
+const char *__romfs_path = "sdmc:/boot.3dsx";
 
 int main()
 {
 	Result rc;
-
+	FILE *file = fopen("sdmc:/debug_hbl.txt", "r");
+	if (file)
+	{
+		DEBUG_MODE = true;
+		fclose(file);
+	}
 	osSetSpeedupEnable(true);
 	rc = romfsInit();
 	if (R_FAILED(rc))
@@ -42,8 +77,8 @@ int main()
 	uiInit();
 	drawingInit();
 	textInit();
-	workerInit();
 	launchInit();
+	workerInit();
 
 	backgroundInit();
 
@@ -52,7 +87,8 @@ int main()
 	// Main loop
 	while (aptMainLoop())
 	{
-		if (!uiUpdate()) break;
+		if (!uiUpdate())
+			break;
 		drawingFrame();
 	}
 

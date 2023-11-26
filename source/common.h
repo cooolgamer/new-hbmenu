@@ -9,6 +9,13 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <inttypes.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdarg.h>
+#include <stdalign.h>
+#include <math.h>
 
 // 3DS includes
 #include <3ds.h>
@@ -27,3 +34,5 @@
 
 #define DIRECTORY_SEPARATOR_CHAR '/'
 static const char DIRECTORY_SEPARATOR[] = "/";
+
+bool isDebugMode();
