@@ -1,3 +1,15 @@
+# The Pirate Launcher
+
+The Pirate Launcher is a joke made on the homebrew channel on the Wii. This is the same joke, but on 3DS, except this is the entire menu and not the banner.
+
+In short, this is just a reskin of The Homebrew Launcher which is forked on.
+it has a hidden feature read it for understanding.
+
+### Preview:
+<img src="https://github.com/cooolgamer/the-pirate-launcher/raw/master/preview.png">
+
+## Original readme
+
 # The Homebrew Launcher
 
 #### Presentation
