@@ -119,6 +119,7 @@ or if you want a more vanilla one,
 https://github.com/SeleDreams/Luma3DS
 thanks again 
 
+also you need an debug_help.txt with r written in it to enable all of the hidden feature, though I yet have to implement the laucher command to make I work...
 This version of the homebrew launcher communicates with luma to make it start the debugger when starting a homebrew software and if a 3dslink.txt file is present on the root of the sd card, it will automatically start 3dslink when it starts, making it way faster to get started with debugging homebrews. Even more if you replace the boot.3dsx at the root of your sd card and then in the luma config (sd:/luma/config.ini), set the autoboot_mode value to 1. Doing this will make homebrew launcher start on boot of the 3ds, so that if your homebrew freezes the whole console you can very quickly go back to debugging after rebooting
 
 Original repository of homebrew launcher : https://github.com/devkitPro/3ds-hbmenu
