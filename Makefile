@@ -10,20 +10,9 @@ TOPDIR ?= $(CURDIR)
 include $(DEVKITARM)/3ds_rules
 
 #enable debug features
-export DEBUG ?= 0
+export DEBUG ?= 1
 
-#release version 
-export RELEASE ?= 0
-
-export VER_MAJOR	:= 2
-export VER_MINOR	:= 4
-export VER_PATCH	:= 2
-
-export VERSTRING	:=	v$(VER_MAJOR).$(VER_MINOR).$(VER_PATCH)
-
-ifeq ($(RELEASE),1)
-	export VERSTRING	:=	$(VERSTRING)-$(shell git describe --dirty --always)
-endif
+export VERSTRING	:=	$(shell git describe --tags --match "v[0-9]*" --abbrev=7 | sed 's/-[0-9]*-g/-/')
 
 #---------------------------------------------------------------------------------
 # TARGET is the name of the output
@@ -58,7 +47,7 @@ GFXBUILD	:=	$(ROMFS)/gfx
 
 APP_TITLE		:=	Homebrew Menu $(VERSTRING)
 APP_DESCRIPTION	:=	Nintendo 3DS Homebrew Launcher
-APP_AUTHOR		:=	Alexyo21
+APP_AUTHOR		:=	Alexyo21, Cooolgamer, Devkitpro
 
 #---------------------------------------------------------------------------------
 # options for code generation
