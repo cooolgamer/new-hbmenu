@@ -114,7 +114,8 @@ You will however need a specific fork of luma to be able to use it. The reason b
 
 I did submit a pull request here for the feature to end up in mainstream luma3ds but it is not yet the case https://github.com/LumaTeam/Luma3DS/pull/1836
 
-You can find my fork here https://github.com/Alexyo21/CustomLuma3ds
+You can find my fork here https://github.com/Alexyo21/Polari3DS
+or cooolgamer https://github.com/cooolgamorg/Starlight3DS
 or if you want a more vanilla one, 
 https://github.com/SeleDreams/Luma3DS
 thanks again 
